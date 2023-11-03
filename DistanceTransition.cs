@@ -1,51 +1,21 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Health))]
-public class HealthBar : MonoBehaviour
+public class DistanceTransition : Transition
 {
-    [SerializeField] private Slider _healthBar;
-    [SerializeField] private Health _health;
+    [SerializeField] private float _transitionRange;
+    [SerializeField] private float _rangeSpread;
 
-    private Coroutine _coroutine;
-
-    private void OnEnable()
+    private void Start()
     {
-        _health.Changed += OnHealthChanged;
+        _transitionRange += Random.Range(-_rangeSpread, _rangeSpread);
     }
 
-    private void OnDisable()
+    private void Update()
     {
-        _health.Changed -= OnHealthChanged;
-    }
+        if(Target == null)
+            NeedTransit = true;
 
-    private void OnHealthChanged(float health)
-    {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
-
-        _coroutine = StartCoroutine(TransformWellnessLevel(health));
-    }
-
-    private IEnumerator TransformWellnessLevel(float targetValue)
-    {
-        bool isWork = true;
-
-        int health = 10;
-
-        while (isWork)
-        {
-            _healthBar.value = Mathf.MoveTowards(_healthBar.value, targetValue, Time.deltaTime * health);
-
-            if (_healthBar.value == targetValue)
-            {
-                isWork = false;
-
-                StopCoroutine(_coroutine);
-            }
-
-            yield return null;
-        }
+        if(Vector2.Distance(transform.position, Target.transform.position) < _transitionRange)
+            NeedTransit = true;
     }
 }
