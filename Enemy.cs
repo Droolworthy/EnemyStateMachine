@@ -1,51 +1,23 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Health))]
-public class HealthBar : MonoBehaviour
+public class Enemy : MonoBehaviour
 {
-    [SerializeField] private Slider _healthBar;
-    [SerializeField] private Health _health;
+    [SerializeField] private int _health;
 
-    private Coroutine _coroutine;
+    private Player _target;
 
-    private void OnEnable()
+    public Player Target => _target;
+
+    public void Init(Player target)
     {
-        _health.Changed += OnHealthChanged;
+        _target = target;
     }
 
-    private void OnDisable()
+    public void TakeDamage(int damage)
     {
-        _health.Changed -= OnHealthChanged;
-    }
+        _health -= damage;
 
-    private void OnHealthChanged(float health)
-    {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
-
-        _coroutine = StartCoroutine(TransformWellnessLevel(health));
-    }
-
-    private IEnumerator TransformWellnessLevel(float targetValue)
-    {
-        bool isWork = true;
-
-        int health = 10;
-
-        while (isWork)
-        {
-            _healthBar.value = Mathf.MoveTowards(_healthBar.value, targetValue, Time.deltaTime * health);
-
-            if (_healthBar.value == targetValue)
-            {
-                isWork = false;
-
-                StopCoroutine(_coroutine);
-            }
-
-            yield return null;
-        }
+        if (_health <= 0)
+            Destroy(gameObject);
     }
 }
