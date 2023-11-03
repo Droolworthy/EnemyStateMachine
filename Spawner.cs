@@ -1,51 +1,59 @@
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Health))]
-public class HealthBar : MonoBehaviour
+public class Spawner : MonoBehaviour
 {
-    [SerializeField] private Slider _healthBar;
-    [SerializeField] private Health _health;
+    [SerializeField] private List<Wave> _waves;
+    [SerializeField] private Transform _spawnPoint;
+    [SerializeField] private Player _player;
 
-    private Coroutine _coroutine;
+    private Wave _currentWave;
+    private int _currentWaveNumber = 0;
+    private int _spawned;
+    private float _timeAfterLastSpawn;
 
-    private void OnEnable()
+    private void Start()
     {
-        _health.Changed += OnHealthChanged;
+        SetWave(_currentWaveNumber);
     }
 
-    private void OnDisable()
+    private void Update()
     {
-        _health.Changed -= OnHealthChanged;
-    }
+        if (_currentWave == null)
+            return;
 
-    private void OnHealthChanged(float health)
-    {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
+        _timeAfterLastSpawn += Time.deltaTime;
 
-        _coroutine = StartCoroutine(TransformWellnessLevel(health));
-    }
-
-    private IEnumerator TransformWellnessLevel(float targetValue)
-    {
-        bool isWork = true;
-
-        int health = 10;
-
-        while (isWork)
+        if(_timeAfterLastSpawn >= _currentWave.Delay)
         {
-            _healthBar.value = Mathf.MoveTowards(_healthBar.value, targetValue, Time.deltaTime * health);
+            InstantiateEnemy();
 
-            if (_healthBar.value == targetValue)
-            {
-                isWork = false;
-
-                StopCoroutine(_coroutine);
-            }
-
-            yield return null;
+            _spawned++;
+            _timeAfterLastSpawn = 0;
         }
+
+        if (_currentWave.Count <= _spawned)
+            _currentWave = null;
     }
+
+    public void SetWave(int index)
+    {
+        _currentWave = _waves[index];
+    }
+
+    private void InstantiateEnemy()
+    {
+        var enemy = Instantiate(_currentWave.Template, _spawnPoint.position, 
+            _spawnPoint.rotation, _spawnPoint).GetComponent<Enemy>();
+
+        enemy.Init(_player);
+    }
+}
+
+[System.Serializable]
+public class Wave
+{
+    public GameObject Template;
+    public float Delay;
+    public float Count; 
 }
