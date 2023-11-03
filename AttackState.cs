@@ -6,7 +6,7 @@ public class AttackState : State
     [SerializeField] private int _damage;
     [SerializeField] private float _delay;
 
-    private float _lastAttackTime;
+    private float _lastAssaultTime;
     private Animator _animator;
 
     private void Start()
@@ -16,17 +16,17 @@ public class AttackState : State
 
     private void Update()
     {
-        if(_lastAttackTime <= 0)
+        if(_lastAssaultTime <= 0)
         {
-            Attack(Target);
+            Assault(Target);
 
-            _lastAttackTime = _delay;
+            _lastAssaultTime = _delay;
         }
 
-        _lastAttackTime -= Time.deltaTime;  
+        _lastAssaultTime -= Time.deltaTime;  
     }
 
-    private void Attack(Player target)
+    private void Assault(Player target)
     {
         _animator.Play("Assault");
 
