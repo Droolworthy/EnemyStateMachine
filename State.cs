@@ -1,51 +1,47 @@
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Health))]
-public class HealthBar : MonoBehaviour
+public class State : MonoBehaviour
 {
-    [SerializeField] private Slider _healthBar;
-    [SerializeField] private Health _health;
+    [SerializeField] private List<Transition> _transitions;
 
-    private Coroutine _coroutine;
+    protected Player Target { get; private set; }
 
-    private void OnEnable()
+    public void Enter(Player target)
     {
-        _health.Changed += OnHealthChanged;
-    }
-
-    private void OnDisable()
-    {
-        _health.Changed -= OnHealthChanged;
-    }
-
-    private void OnHealthChanged(float health)
-    {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
-
-        _coroutine = StartCoroutine(TransformWellnessLevel(health));
-    }
-
-    private IEnumerator TransformWellnessLevel(float targetValue)
-    {
-        bool isWork = true;
-
-        int health = 10;
-
-        while (isWork)
+        if(enabled == false)
         {
-            _healthBar.value = Mathf.MoveTowards(_healthBar.value, targetValue, Time.deltaTime * health);
+            Target = target;
+            enabled = true;
 
-            if (_healthBar.value == targetValue)
-            {
-                isWork = false;
-
-                StopCoroutine(_coroutine);
+            foreach(var transition in _transitions)   
+            {                                         
+                transition.enabled = true;  
+                
+                transition.Init(Target);               
             }
-
-            yield return null;
         }
+    }
+
+    public void Exit()
+    {
+        if(enabled == true)
+        {
+            foreach(var transition in _transitions)
+                transition.enabled = false;
+
+            enabled = false;
+        }
+    }
+
+    public State GetNextCondition()
+    {
+        foreach(var transition in _transitions)
+        {
+            if (transition.NeedTransit)
+                return transition.TargetState;
+        }
+
+        return null;
     }
 }
