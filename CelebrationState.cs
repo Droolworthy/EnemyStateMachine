@@ -1,51 +1,22 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Health))]
-public class HealthBar : MonoBehaviour
+[RequireComponent (typeof(Animator))]
+public class CelebrationState : State
 {
-    [SerializeField] private Slider _healthBar;
-    [SerializeField] private Health _health;
+    private Animator _animator;
 
-    private Coroutine _coroutine;
+    private void Awake()
+    {
+        _animator = GetComponent<Animator>();
+    }
 
     private void OnEnable()
     {
-        _health.Changed += OnHealthChanged;
+        _animator.Play("Celebration");
     }
 
     private void OnDisable()
     {
-        _health.Changed -= OnHealthChanged;
-    }
-
-    private void OnHealthChanged(float health)
-    {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
-
-        _coroutine = StartCoroutine(TransformWellnessLevel(health));
-    }
-
-    private IEnumerator TransformWellnessLevel(float targetValue)
-    {
-        bool isWork = true;
-
-        int health = 10;
-
-        while (isWork)
-        {
-            _healthBar.value = Mathf.MoveTowards(_healthBar.value, targetValue, Time.deltaTime * health);
-
-            if (_healthBar.value == targetValue)
-            {
-                isWork = false;
-
-                StopCoroutine(_coroutine);
-            }
-
-            yield return null;
-        }
+        _animator.StopPlayback();
     }
 }
