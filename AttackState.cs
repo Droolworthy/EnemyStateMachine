@@ -1,51 +1,35 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Health))]
-public class HealthBar : MonoBehaviour
+[RequireComponent (typeof(Animator))]
+public class AttackState : State
 {
-    [SerializeField] private Slider _healthBar;
-    [SerializeField] private Health _health;
+    [SerializeField] private int _damage;
+    [SerializeField] private float _delay;
 
-    private Coroutine _coroutine;
+    private float _lastAttackTime;
+    private Animator _animator;
 
-    private void OnEnable()
+    private void Start()
     {
-        _health.Changed += OnHealthChanged;
+        _animator = GetComponent<Animator>();
     }
 
-    private void OnDisable()
+    private void Update()
     {
-        _health.Changed -= OnHealthChanged;
-    }
-
-    private void OnHealthChanged(float health)
-    {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
-
-        _coroutine = StartCoroutine(TransformWellnessLevel(health));
-    }
-
-    private IEnumerator TransformWellnessLevel(float targetValue)
-    {
-        bool isWork = true;
-
-        int health = 10;
-
-        while (isWork)
+        if(_lastAttackTime <= 0)
         {
-            _healthBar.value = Mathf.MoveTowards(_healthBar.value, targetValue, Time.deltaTime * health);
+            Attack(Target);
 
-            if (_healthBar.value == targetValue)
-            {
-                isWork = false;
-
-                StopCoroutine(_coroutine);
-            }
-
-            yield return null;
+            _lastAttackTime = _delay;
         }
+
+        _lastAttackTime -= Time.deltaTime;  
+    }
+
+    private void Attack(Player target)
+    {
+        _animator.Play("Assault");
+
+        target.ApplyDamage(_damage);
     }
 }
