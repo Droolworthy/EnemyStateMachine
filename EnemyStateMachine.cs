@@ -1,51 +1,49 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
-[RequireComponent(typeof(Health))]
-public class HealthBar : MonoBehaviour
+[RequireComponent(typeof(Enemy))]
+public class EnemyStateMachine : MonoBehaviour
 {
-    [SerializeField] private Slider _healthBar;
-    [SerializeField] private Health _health;
+    [SerializeField] private State _firstState;
 
-    private Coroutine _coroutine;
+    private Player _target;
+    private State _currentState;
 
-    private void OnEnable()
+    public State Current => _currentState;
+
+    private void Start()
     {
-        _health.Changed += OnHealthChanged;
+        _target = GetComponent<Enemy>().Target;
+
+        Reset(_firstState);
     }
 
-    private void OnDisable()
+    private void Update()
     {
-        _health.Changed -= OnHealthChanged;
+        if (_currentState == null)
+            return;
+
+        var nextState = _currentState.GetNextCondition();
+
+        if(nextState != null)
+            Transit(nextState);
     }
 
-    private void OnHealthChanged(float health)
+    private void Reset(State startState)
     {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
+        _currentState = startState;
 
-        _coroutine = StartCoroutine(TransformWellnessLevel(health));
+        if (_currentState != null)
+            _currentState.Enter(_target);
     }
 
-    private IEnumerator TransformWellnessLevel(float targetValue)
+    private void Transit(State nextState)
     {
-        bool isWork = true;
+        if (_currentState != null)
+            _currentState.Exit();
 
-        int health = 10;
+        _currentState = nextState;
 
-        while (isWork)
-        {
-            _healthBar.value = Mathf.MoveTowards(_healthBar.value, targetValue, Time.deltaTime * health);
-
-            if (_healthBar.value == targetValue)
-            {
-                isWork = false;
-
-                StopCoroutine(_coroutine);
-            }
-
-            yield return null;
-        }
-    }
+        if(_currentState != null)
+            _currentState.Enter(_target);
+    }     
 }
